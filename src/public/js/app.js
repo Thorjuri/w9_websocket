@@ -31,11 +31,11 @@ function handlenickNameSubmit(event){
     socket.emit("nickname", input.value);
 }
 
-function showRoom(){
+function showRoom(counts){
     welcome.hidden = true;
     room.hidden = false;
     const h3 = room.querySelector("h3")
-    h3.innerText = `Room ${roomName}`
+    h3.innerText = `Room ${roomName} (${counts})`
     const msgForm = room.querySelector("#msg");
     const nameForm = room.querySelector("#name");
     msgForm.addEventListener("submit", handleMessageSubmit)
@@ -52,13 +52,30 @@ function handleRoomSubmit(event){
 
 form.addEventListener("submit", handleRoomSubmit)
 
-socket.on("welcome", (user)=> {  //백엔드의 'welcom'이벤트의 socket.to 실행을 위한 프론트측 코드 (신규접속 시 방 전체 메세지)
+socket.on("welcome", (user, roomName,  newCount)=> {  //백엔드의 'welcom'이벤트의 socket.to 실행을 위한 프론트측 코드 (신규접속 시 방 전체 메세지)
+    const h3 = room.querySelector("h3");
+    h3.innerText = `Room ${roomName} (${newCount})`
     addMessage(`${user} joined!!`)
+});
+
+socket.on("room_change", (rooms) => {  // welcome 화면에 현재 존재하는 public room 목록 보여주기
+    const roomList = welcome.querySelector("ul");
+    roomList.innerHTML = "";
+    if(rooms.length === 0) {
+        return ;
+    }
+    rooms.forEach(room => {
+        const li = document.createElement("li");
+        li.innerText = room;
+        roomList.append(li)
+    });
 });
 
 socket.on("new_message", addMessage)
 
-socket.on("Bye", (left)=> {  //백엔드의 'Bye'이벤트의 socket.to 실행을 위한 프론트측 코드 (연결종료 시 방 전체 메세지)
+socket.on("Bye", (left, newCount)=> {  //백엔드의 'Bye'이벤트의 socket.to 실행을 위한 프론트측 코드 (연결종료 시 방 전체 메세지)
+    const h3 = room.querySelector("h3");
+    h3.innerText = `Room ${roomName} (${newCount})`
     addMessage(`${left} left!!`)
 });
 
