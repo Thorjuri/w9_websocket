@@ -24,16 +24,20 @@ const io = SocketIo(server); // http + socketio 서버
 // http://localhost:3000/socket.io/socket.io.js socketio가 제공하는 url
 
 io.on("connection", socket => {
-    socket.on("enter_room", (msg, third, forth, fifth, sixth, cb ) => {
-        console.log(msg, third, forth, fifth, sixth) // 해당 이벤트명으로 받은 데이터 (프론트의 emit의 2번째 argument = 객체로 보낸 payload)
+    socket.onAny((event)=> {  //onAny 메소드 = 미들웨어 개념. socket으로 들어온 모든 event를 감지함
+        console.log(`socket Event: ${event}`) // 'socket Event: enter_room'
+    })
+    socket.on("enter_room", (roomName, cb ) => {
+        console.log(socket.id) // 'hAVSAZa6eYzcWkEcAAAC' id 메소드 = socketId 확인
+        console.log(socket.rooms) // Set(1) { 'hAVSAZa6eYzcWkEcAAAC' } 
+        socket.join(roomName)
+        console.log(socket.rooms)// Set(2) { 'hAVSAZa6eYzcWkEcAAAC', 'Thor room' } rooms 메소드 = 입장한 room 확인
         setTimeout(()=> {
-            cb();  // 프론트에서 실행될 callback 함수(프론트의 emit의 3번째 argument인 콜백함수)
-        }, 5000) 
+            cb("hello from the backend");  //프론트에서 실행될 함수에, 파라미터를 백엔드에서 지정해 줄 수 있음.
+        }, 5000) //받아온 파라미터 중 '함수'형식 =  백엔드가 실행시키고 >> 프론트엔드에서 실행 됨
     })
 });
-
-
-
+ 
 
 
 server.listen(port, ()=> {

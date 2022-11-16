@@ -3,22 +3,22 @@ const socket = io(); //프론트에 socket.io 설치
 const welcome = document.getElementById("welcome");
 const form = welcome.querySelector("form")
 
+function backendDone(msg){
+    console.log('the backend says: ', msg) //msg는 백엔드에서 함수 실행시킬때 지정해줄 수 있음
+}
+
 function handleRoomSubmit(event){
     event.preventDefault();
     const input = form.querySelector('input')
-    socket.emit("enter_room", {payload: input.value},"hey", "its 5th data", 5, true, ()=>{ //enter_room 이벤트 발생 시, argument를 emit(객체형식 가능)
-        console.log("server is done!!")  //추가로 서버에서 호출한 callback 함수도 실행 
-    }); 
-    input.value = ""
-}
+    socket.emit("enter_room", input.value, backendDone); //function 형식은 반드시 가장 마지막 parameter로
+input.value = ""                                        //function 형식은 백엔드가 실행시키고 >> 프론트에서 실행 됨
+};                                                      //fucntion의 파라미터는, 실행시키는 백엔드에서 지정해줄 수 있음
 
 form.addEventListener("submit", handleRoomSubmit)
 
 
-//emit의 파라미터(arguments)는 객수 제한이 없다. 원하는 만큼 보낼 수 있음
-// 대신 서버의 on 에서도 해당 갯수만큼 파라미터를 받아줘야함 = io.on("event", (prm1, prm2, prm3, prm4, prm5....)=> { })
-// 첫번째, event명 (임으로 지정 가능. 단 받을 서버측에도 이벤트명 똑같이 맞춰줄 것, string 형식.)
-// 두번째, 보낼 데이터 (스트링, 객체 모두 가능)
-// 세번째, 서버에서 호출하는 callback 함수
-// 네번째, ..
-// 다섯번재, ..
+// emit 의 parameters 규칙
+// 1. 첫번째 인자는 반드시 '이벤트명'(string)
+// 2. 함수는 반드시 마지막 인자로
+// 3. 첫번째 ~ 마지막 사이의 인자들은 형식, 갯수 제한 없음 
+// 4. 서버에서 on 으로 받을때는 '이벤트명'과 인자 갯수, 순서 반드시 맞춰주기
