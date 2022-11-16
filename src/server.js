@@ -1,5 +1,5 @@
 const http = require('http');
-const WebSocket = require('ws')
+const SocketIo = require('socket.io')
 const express = require('express');
 const { parse } = require('path');
 const app = express();
@@ -16,15 +16,29 @@ app.get("/*", (req, res)=> {
     res.redirect("/");
 });
 
-;
 
 
 const server = http.createServer(app); //http 서버
-const wss = new WebSocket.Server({ server }); // http + ws 서버
-//server.js 한 페이지 안에, http서버와 ws 서버를 모두 만들기 위해 http서버와 ws서버 리스너를 분리해서 작성한다.
-// http서버인 'server'를 인자로 넣어주면 http 서버, ws 서버를 모두 돌릴 수 있다.
-// 꼭 이렇게 안 해도 됨. 그냥 ws 서버로만 만들어도 됨.
-// 이 wss 는 http와 ws 서버를 같은 서버(포트)에서 돌리기 위해 응용한 방식.
+const io = SocketIo(server); // http + socketio 서버
+// const wss = new WebSocket.Server({ server }); // http + websocket 서버
+// http://localhost:3000/socket.io/socket.io.js socketio가 제공하는 url
+
+io.on("connection", socket => {
+    socket.on("enter_room", (msg, third, forth, fifth, sixth, cb ) => {
+        console.log(msg, third, forth, fifth, sixth) // 해당 이벤트명으로 받은 데이터 (프론트의 emit의 2번째 argument = 객체로 보낸 payload)
+        setTimeout(()=> {
+            cb();  // 프론트에서 실행될 callback 함수(프론트의 emit의 3번째 argument인 콜백함수)
+        }, 5000) 
+    })
+});
+
+
+
+
+
+server.listen(port, ()=> {
+    console.log(`${port}번 서버 실행`);
+});
 
 
 /*
@@ -36,6 +50,7 @@ const wss = new WebSocket.Server({ server }); // http + ws 서버
 브라우저에게 응답해주지는 못함. 즉, connection 이후의 모든 응답은 아래 connection listen을 해야만 가능.
 */
 
+/*  ---------- websocket ------------
 const sockets = [];
 
 wss.on("connection", (socket)=> {  // 웹소켓이 연결되면,
@@ -53,8 +68,6 @@ wss.on("connection", (socket)=> {  // 웹소켓이 연결되면,
             };        
     });  
 });
+-------------------------------------- */
 
-server.listen(port, ()=> {
-    console.log(`${port}번 서버 실행`);
-});
 
