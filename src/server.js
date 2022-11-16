@@ -24,17 +24,30 @@ const io = SocketIo(server); // http + socketio 서버
 // http://localhost:3000/socket.io/socket.io.js socketio가 제공하는 url
 
 io.on("connection", socket => {
+    // io.socketsJoin("Anouncement") //모든 소켓이 'Anouncemetn'라는 room으로 들어가게 함!!
+    socket["nickname"] = "Anon"
     socket.onAny((event)=> {  //onAny 메소드 = 미들웨어 개념. socket으로 들어온 모든 event를 감지함
+        console.log(io.sockets.adapter)
         console.log(`socket Event: ${event}`) // 'socket Event: enter_room'
     })
-    socket.on("enter_room", (roomName, cb ) => {
-        console.log(socket.id) // 'hAVSAZa6eYzcWkEcAAAC' id 메소드 = socketId 확인
-        console.log(socket.rooms) // Set(1) { 'hAVSAZa6eYzcWkEcAAAC' } 
-        socket.join(roomName)
-        console.log(socket.rooms)// Set(2) { 'hAVSAZa6eYzcWkEcAAAC', 'Thor room' } rooms 메소드 = 입장한 room 확인
-        setTimeout(()=> {
-            cb("hello from the backend");  //프론트에서 실행될 함수에, 파라미터를 백엔드에서 지정해 줄 수 있음.
-        }, 5000) //받아온 파라미터 중 '함수'형식 =  백엔드가 실행시키고 >> 프론트엔드에서 실행 됨
+    socket.on("enter_room", (roomName, cb ) => {  // room 만들기 혹은 입장
+        socket.join(roomName) // 1.room 입장
+        cb()  //2. 프론트에 showRoom 함수실행
+        socket.to(roomName).emit("welcome", socket.nickname) //해당 room의 나를 제외한 모든 접속자에게 메세지 보냄(본인 제외)
+    });
+
+    socket.on("new_message", (message, room, cb) => {  // message 보내기
+        socket.to(room).emit("new_message", `${socket.nickname}: ${message}`); //해당 room의 모든 접속자에게 message 보냄
+        cb();
+    });
+
+    socket.on("nickname", (nickname) => { //프론트에서 받아온 nickname을 socket 객체에 nickname 속성으로 저장
+        socket["nickname"] = nickname;    // 필요할땐 언제든 socket 객체에서 꺼내설 쓸 수 있음
+    });
+
+    socket.on("disconnecting", ()=>{
+        socket.rooms.forEach(room => { socket.to(room).emit("Bye", socket.nickname) // 연결 종료 시(직전에) 해당 room 전체에 메세지 보냄(본인 제외)
+        });
     })
 });
  
